@@ -9,8 +9,8 @@ export class CapBrowserWeb extends WebPlugin implements CapBrowserPlugin {
     });
   }
 
-  async echo(options: { value: string }): Promise<{value: string}> {
-    console.log('ECHO', options);
+  async open(options: { value: string }): Promise<{value: string}> {
+    console.log('OPEN', options);
     return options;
   }
 }

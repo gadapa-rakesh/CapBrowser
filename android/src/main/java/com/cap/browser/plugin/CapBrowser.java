@@ -10,7 +10,8 @@ import com.getcapacitor.PluginMethod;
 public class CapBrowser extends Plugin {
 
     @PluginMethod()
-    public void echo(PluginCall call) {
+    public void open(PluginCall call) {
+        //TODO: modify the code to open CustomTabsIntent
         String value = call.getString("value");
 
         JSObject ret = new JSObject();

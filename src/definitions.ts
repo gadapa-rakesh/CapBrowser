@@ -5,5 +5,5 @@ declare module "@capacitor/core" {
 }
 
 export interface CapBrowserPlugin {
-  echo(options: { value: string }): Promise<{value: string}>;
+  open(options: { value: string }): Promise<{value: string}>;
 }

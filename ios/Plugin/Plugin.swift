@@ -9,7 +9,7 @@ import WKWebViewController
 @objc(CapBrowser)
 public class CapBrowser: CAPPlugin {
     
-    @objc func echo(_ call: CAPPluginCall) {
+    @objc func open(_ call: CAPPluginCall) {
         let inputURL = call.getString("url") ?? ""
         
         let url = URL.init(string: inputURL)!
