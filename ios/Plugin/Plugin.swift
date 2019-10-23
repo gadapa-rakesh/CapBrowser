@@ -10,22 +10,29 @@ import WKWebViewController
 public class CapBrowser: CAPPlugin {
     
     @objc func open(_ call: CAPPluginCall) {
-        let inputURL = call.getString("url") ?? ""
+        guard let urlString = call.getString("url") else {
+            call.error("Must provide a URL to open")
+            return
+        }
         
-        let url = URL.init(string: inputURL)!
-        let webViewController = WKWebViewController.init()
-        webViewController.source = .remote(url)
-        webViewController.bypassedSSLHosts = [url.host!]
-        webViewController.userAgent = call.getString("user-agent") ?? ""
-        webViewController.websiteTitleInNavigationBar = false
-        webViewController.navigationItem.title = url.host
-        webViewController.leftNavigaionBarItemTypes = [.reload]
-        webViewController.toolbarItemTypes = [.back, .forward, .activity]
+        if urlString.isEmpty {
+            call.error("URL must not be empty")
+            return
+        }
         
-        let navigation = UINavigationController.init(rootViewController: webViewController)
-        
-        self.bridge.viewController.present(navigation, animated: true, completion: {
-          call.success()
-        })
+        DispatchQueue.main.async {
+            let url = URL(string: urlString)
+            let webViewController = WKWebViewController.init()
+            webViewController.source = .remote(url!)
+            webViewController.bypassedSSLHosts = [url!.host!]
+            webViewController.websiteTitleInNavigationBar = false
+            webViewController.leftNavigaionBarItemTypes = [.reload]
+            webViewController.toolbarItemTypes = [.back, .forward, .activity]
+            let navigation = UINavigationController.init(rootViewController: webViewController)
+            
+            self.bridge.viewController.present(navigation, animated: true, completion: {
+              call.success()
+            })
+        }
     }
 }
