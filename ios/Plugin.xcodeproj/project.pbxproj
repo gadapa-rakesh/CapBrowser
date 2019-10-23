@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0118E181235FD24C0096065B /* WKWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0118E17E235FD24C0096065B /* WKWebViewController.swift */; };
+		0118E182235FD24C0096065B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0118E17F235FD24C0096065B /* Assets.xcassets */; };
+		0118E183235FD24C0096065B /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0118E180235FD24C0096065B /* Enums.swift */; };
 		03FC29A292ACC40490383A1F /* Pods_Plugin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B2A61DA5A1F2DD4F959604D /* Pods_Plugin.framework */; };
 		20C0B05DCFC8E3958A738AF2 /* Pods_PluginTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6753A823D3815DB436415E3 /* Pods_PluginTests.framework */; };
 		50ADFF92201F53D600D50D53 /* Plugin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50ADFF88201F53D600D50D53 /* Plugin.framework */; };
@@ -28,6 +31,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0118E17E235FD24C0096065B /* WKWebViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WKWebViewController.swift; sourceTree = "<group>"; };
+		0118E17F235FD24C0096065B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		0118E180235FD24C0096065B /* Enums.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Enums.swift; sourceTree = "<group>"; };
 		3B2A61DA5A1F2DD4F959604D /* Pods_Plugin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Plugin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		50ADFF88201F53D600D50D53 /* Plugin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Plugin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		50ADFF8B201F53D600D50D53 /* Plugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Plugin.h; sourceTree = "<group>"; };
@@ -90,6 +96,9 @@
 		50ADFF8A201F53D600D50D53 /* Plugin */ = {
 			isa = PBXGroup;
 			children = (
+				0118E17F235FD24C0096065B /* Assets.xcassets */,
+				0118E180235FD24C0096065B /* Enums.swift */,
+				0118E17E235FD24C0096065B /* WKWebViewController.swift */,
 				50E1A94720377CB70090CE1A /* Plugin.swift */,
 				50ADFF8B201F53D600D50D53 /* Plugin.h */,
 				50ADFFA72020EE4F00D50D53 /* Plugin.m */,
@@ -225,6 +234,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0118E182235FD24C0096065B /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -284,14 +294,12 @@
 				"${BUILT_PRODUCTS_DIR}/Capacitor/Capacitor.framework",
 				"${BUILT_PRODUCTS_DIR}/CapacitorCordova/Cordova.framework",
 				"${BUILT_PRODUCTS_DIR}/JustLayout/JustLayout.framework",
-				"${BUILT_PRODUCTS_DIR}/WKWebViewController/WKWebViewController.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Capacitor.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Cordova.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/JustLayout.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/WKWebViewController.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -305,7 +313,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0118E181235FD24C0096065B /* WKWebViewController.swift in Sources */,
 				50E1A94820377CB70090CE1A /* Plugin.swift in Sources */,
+				0118E183235FD24C0096065B /* Enums.swift in Sources */,
 				50ADFFA82020EE4F00D50D53 /* Plugin.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

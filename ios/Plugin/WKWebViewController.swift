@@ -234,7 +234,7 @@ open class WKWebViewController: UIViewController {
                 })
             }
         case titleKeyPath?:
-            navigationItem.title = webView?.title
+            navigationItem.title = webView?.url?.host
         default:
             super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
         }

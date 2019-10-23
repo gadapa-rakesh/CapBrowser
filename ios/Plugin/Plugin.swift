@@ -1,6 +1,5 @@
 import Foundation
 import Capacitor
-import WKWebViewController
 
 /**
  * Please read the Capacitor iOS Plugin Development Guide
@@ -20,16 +19,17 @@ public class CapBrowser: CAPPlugin {
             return
         }
         
+        let headers = call.get("headers", [String: String].self, [:])
+        
         DispatchQueue.main.async {
             let url = URL(string: urlString)
             let webViewController = WKWebViewController.init()
             webViewController.source = .remote(url!)
-            webViewController.bypassedSSLHosts = [url!.host!]
-            webViewController.websiteTitleInNavigationBar = false
+            webViewController.headers = headers
             webViewController.leftNavigaionBarItemTypes = [.reload]
             webViewController.toolbarItemTypes = [.back, .forward, .activity]
             let navigation = UINavigationController.init(rootViewController: webViewController)
-            
+            navigation.navigationBar.backgroundColor = .white
             self.bridge.viewController.present(navigation, animated: true, completion: {
               call.success()
             })

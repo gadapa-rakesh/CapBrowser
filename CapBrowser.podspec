@@ -10,5 +10,5 @@
     s.source_files = 'ios/Plugin/**/*.{swift,h,m,c,cc,mm,cpp}'
     s.ios.deployment_target  = '11.0'
     s.dependency 'Capacitor'
-    s.dependency 'WKWebViewController', '~> 1.3.0'
+    s.dependency 'JustLayout', '~> 1.6.1'
   end

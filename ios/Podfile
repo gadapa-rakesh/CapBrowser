@@ -9,7 +9,7 @@ end
 
 target 'Plugin' do
   capacitor_pods
-  pod 'WKWebViewController', '1.3.0'
+  pod 'JustLayout', '1.6.1'
 end
 
 target 'PluginTests' do
