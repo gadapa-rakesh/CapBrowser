@@ -11,4 +11,5 @@
     s.ios.deployment_target  = '11.0'
     s.dependency 'Capacitor'
     s.dependency 'JustLayout', '~> 1.6.1'
+    s.resources = 'ios/Plugin/**/*.{lproj,storyboard,xcdatamodeld,xib,xcassets,json}'
   end

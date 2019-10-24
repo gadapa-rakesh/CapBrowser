@@ -28,8 +28,10 @@ public class CapBrowser: CAPPlugin {
             webViewController.headers = headers
             webViewController.leftNavigaionBarItemTypes = [.reload]
             webViewController.toolbarItemTypes = [.back, .forward, .activity]
+            webViewController.capBrowserPlugin = self
             let navigation = UINavigationController.init(rootViewController: webViewController)
             navigation.navigationBar.backgroundColor = .white
+            navigation.modalPresentationStyle = .fullScreen
             self.bridge.viewController.present(navigation, animated: true, completion: {
               call.success()
             })

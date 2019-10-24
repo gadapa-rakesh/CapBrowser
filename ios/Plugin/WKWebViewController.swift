@@ -58,6 +58,7 @@ open class WKWebViewController: UIViewController {
     open var bypassedSSLHosts: [String]?
     open var cookies: [HTTPCookie]?
     open var headers: [String: String]?
+    open var capBrowserPlugin: CapBrowser?
     internal var customUserAgent: String? {
         didSet {
             guard let agent = userAgent else {
@@ -152,6 +153,7 @@ open class WKWebViewController: UIViewController {
         if websiteTitleInNavigationBar {
             webView?.removeObserver(self, forKeyPath: titleKeyPath)
         }
+        webView?.removeObserver(self, forKeyPath: #keyPath(WKWebView.url))
     }
     
     override open func viewDidLoad() {
@@ -175,6 +177,7 @@ open class WKWebViewController: UIViewController {
         if websiteTitleInNavigationBar {
             webView.addObserver(self, forKeyPath: titleKeyPath, options: .new, context: nil)
         }
+        webView.addObserver(self, forKeyPath: #keyPath(WKWebView.url) , options: .new, context: nil)
         
         //        view = webView
         self.webView = webView
@@ -235,6 +238,8 @@ open class WKWebViewController: UIViewController {
             }
         case titleKeyPath?:
             navigationItem.title = webView?.url?.host
+        case "URL":
+            self.capBrowserPlugin?.notifyListeners("urlChangeEvent", data: ["url" : webView?.url?.absoluteString])
         default:
             super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
         }
