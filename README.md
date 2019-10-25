@@ -3,6 +3,7 @@ This [capacitor](https://capacitor.ionicframework.com/) plugin looks similar to 
  - Http header support
 
 **API** 
+
 ***open***
 
     CapBrowser.open({
