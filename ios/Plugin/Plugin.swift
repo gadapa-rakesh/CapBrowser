@@ -7,6 +7,7 @@ import Capacitor
  */
 @objc(CapBrowser)
 public class CapBrowser: CAPPlugin {
+    var navigationWebViewController: UINavigationController?
     
     @objc func open(_ call: CAPPluginCall) {
         guard let urlString = call.getString("url") else {
@@ -29,12 +30,18 @@ public class CapBrowser: CAPPlugin {
             webViewController.leftNavigaionBarItemTypes = [.reload]
             webViewController.toolbarItemTypes = [.back, .forward, .activity]
             webViewController.capBrowserPlugin = self
-            let navigation = UINavigationController.init(rootViewController: webViewController)
-            navigation.navigationBar.backgroundColor = .white
-            navigation.modalPresentationStyle = .fullScreen
-            self.bridge.viewController.present(navigation, animated: true, completion: {
+            self.navigationWebViewController = UINavigationController.init(rootViewController: webViewController)
+            self.navigationWebViewController?.navigationBar.backgroundColor = .white
+            self.navigationWebViewController?.modalPresentationStyle = .fullScreen
+            self.bridge.viewController.present(self.navigationWebViewController!, animated: true, completion: {
               call.success()
             })
+        }
+    }
+    
+    @objc func close(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+         self.navigationWebViewController?.dismiss(animated: true, completion: nil)
         }
     }
 }
