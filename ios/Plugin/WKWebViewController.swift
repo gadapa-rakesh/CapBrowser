@@ -567,6 +567,7 @@ fileprivate extension WKWebViewController {
         }
         
         let activityViewController = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        activityViewController.popoverPresentationController?.barButtonItem = (sender as! UIBarButtonItem)
         present(activityViewController, animated: true, completion: nil)
     }
     
@@ -576,6 +577,7 @@ fileprivate extension WKWebViewController {
             canDismiss = delegate?.webViewController?(self, canDismiss: url) ?? true
         }
         if canDismiss {
+            UIDevice.current.setValue(Int(UIInterfaceOrientation.portrait.rawValue), forKey: "orientation")
             dismiss(animated: true, completion: nil)
         }
     }
@@ -583,6 +585,8 @@ fileprivate extension WKWebViewController {
     @objc func customDidClick(sender: BlockBarButtonItem) {
         sender.block?(self)
     }
+    
+    func canRotate() -> Void {}
 }
 
 // MARK: - WKUIDelegate
