@@ -8,8 +8,25 @@ import Capacitor
 @objc(CapBrowser)
 public class CapBrowser: CAPPlugin {
     var navigationWebViewController: UINavigationController?
+    private var privacyScreen: UIImageView?
+    private var isSetupDone = false
+    
+    private func setup(){
+        self.isSetupDone = true
+        
+        #if swift(>=4.2)
+        NotificationCenter.default.addObserver(self, selector: #selector(appDidBecomeActive(_:)), name: UIApplication.didBecomeActiveNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive(_:)), name: UIApplication.willResignActiveNotification, object: nil)
+        #else
+        NotificationCenter.default.addObserver(self, selector: #selector(appDidBecomeActive(_:)), name:.UIApplicationDidBecomeActive, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive(_:)), name:.UIApplicationWillResignActive, object: nil)
+        #endif
+    }
     
     @objc func open(_ call: CAPPluginCall) {
+        if !self.isSetupDone {
+            self.setup()
+        }
         guard let urlString = call.getString("url") else {
             call.error("Must provide a URL to open")
             return
@@ -43,5 +60,35 @@ public class CapBrowser: CAPPlugin {
         DispatchQueue.main.async {
          self.navigationWebViewController?.dismiss(animated: true, completion: nil)
         }
+    }
+    
+    private func showPrivacyScreen(){
+        if privacyScreen == nil {
+            self.privacyScreen = UIImageView()
+            if let launchImage = UIImage(named: "LaunchImage") {
+                privacyScreen!.image = launchImage
+                privacyScreen!.frame = UIScreen.main.bounds
+                privacyScreen!.contentMode = .scaleAspectFill
+                privacyScreen!.isUserInteractionEnabled = false
+            } else if let launchImage = UIImage(named: "Splash") {
+                privacyScreen!.image = launchImage
+                privacyScreen!.frame = UIScreen.main.bounds
+                privacyScreen!.contentMode = .scaleAspectFill
+                privacyScreen!.isUserInteractionEnabled = false
+            }
+        }
+        self.navigationWebViewController?.view.addSubview(self.privacyScreen!)
+    }
+    
+    private func hidePrivacyScreen(){
+        self.privacyScreen?.removeFromSuperview()
+    }
+    
+    @objc func appDidBecomeActive(_ notification: NSNotification) {
+        self.hidePrivacyScreen()
+    }
+    
+    @objc func appWillResignActive(_ notification: NSNotification) {
+        self.showPrivacyScreen()
     }
 }
