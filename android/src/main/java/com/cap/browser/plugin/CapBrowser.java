@@ -1,21 +1,159 @@
 package com.cap.browser.plugin;
 
+import android.content.ComponentName;
+import android.content.Intent;
+import android.graphics.Color;
+import android.net.Uri;
+import android.os.Bundle;
+import android.support.customtabs.CustomTabsCallback;
+import android.support.customtabs.CustomTabsClient;
+import android.support.customtabs.CustomTabsIntent;
+import android.support.customtabs.CustomTabsServiceConnection;
+import android.support.customtabs.CustomTabsSession;
+import android.util.Log;
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.NativePlugin;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
+import org.json.JSONException;
+
+import java.util.Iterator;
 
 @NativePlugin()
 public class CapBrowser extends Plugin {
+    public static final String CUSTOM_TAB_PACKAGE_NAME = "com.android.chrome";  // Change when in stable
+
+    private CustomTabsClient customTabsClient;
+    CustomTabsServiceConnection connection = new CustomTabsServiceConnection() {
+        @Override
+        public void onCustomTabsServiceConnected(ComponentName name, CustomTabsClient client) {
+            customTabsClient = client;
+            client.warmup(0);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+        }
+    };
+    private CustomTabsSession currentSession;
 
     @PluginMethod()
     public void open(PluginCall call) {
-        //TODO: modify the code to open CustomTabsIntent
-        String value = call.getString("value");
+        String url = call.getString("url");
+        String toolbarColor = call.getString("toolbarColor");
 
-        JSObject ret = new JSObject();
-        ret.put("value", value);
-        call.success(ret);
+        if (url == null) {
+            call.error("Must provide a URL to open");
+            return;
+        }
+
+        if (url.isEmpty()) {
+            call.error("URL must not be empty");
+            return;
+        }
+
+        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(getCustomTabsSession());
+
+        builder.addDefaultShareMenuItem();
+
+        if (toolbarColor != null) {
+            try {
+                builder.setToolbarColor(Color.parseColor(toolbarColor));
+            } catch (IllegalArgumentException ex) {
+                Log.e(getLogTag(), "Invalid color provided for toolbarColor. Using default");
+            }
+        }
+
+        CustomTabsIntent tabsIntent = builder.build();
+        tabsIntent.intent.putExtra(Intent.EXTRA_REFERRER,
+                Uri.parse(Intent.URI_ANDROID_APP_SCHEME + "//" + getContext().getPackageName()));
+
+        JSObject headers = call.getObject("headers");
+        if(headers != null) {
+            Iterator<String> keys = headers.keys();
+            Bundle ctHeaders = new Bundle();
+            while(keys.hasNext()) {
+                String key = keys.next();
+                ctHeaders.putString(key, headers.getString(key));
+            }
+            tabsIntent.intent.putExtra(android.provider.Browser.EXTRA_HEADERS, ctHeaders);
+        }
+
+        tabsIntent.launchUrl(getContext(), Uri.parse(url));
+        call.success();
+    }
+
+    @PluginMethod()
+    public void close(PluginCall call) {
+        Intent intent = new Intent(getContext(), getBridge().getActivity().getClass());
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        getContext().startActivity(intent);
+    }
+
+    @PluginMethod()
+    public void prefetch(PluginCall call) {
+        JSArray urls = call.getArray("urls");
+        if (urls == null || urls.length() == 0) {
+            call.error("Must provide an array of URLs to prefetch");
+            return;
+        }
+
+        CustomTabsSession session = getCustomTabsSession();
+
+        if (session == null) {
+            call.error("Browser session isn't ready yet");
+            return;
+        }
+
+        try {
+            for (String url : urls.<String>toList()) {
+                session.mayLaunchUrl(Uri.parse(url), null, null);
+            }
+        } catch(JSONException ex) {
+            call.error("Unable to process provided urls list. Ensure each item is a string and valid URL", ex);
+            return;
+        }
+    }
+
+    public void load() {
+    }
+
+    protected void handleOnResume() {
+        boolean ok = CustomTabsClient.bindCustomTabsService(getContext(), CUSTOM_TAB_PACKAGE_NAME, connection);
+        if (!ok) {
+            Log.e(getLogTag(), "Error binding to custom tabs service");
+        }
+    }
+
+    protected void handleOnPause() {
+        getContext().unbindService(connection);
+    }
+
+    public CustomTabsSession getCustomTabsSession() {
+        if (customTabsClient == null) {
+            return null;
+        }
+
+        if (currentSession == null) {
+            currentSession = customTabsClient.newSession(new CustomTabsCallback(){
+                @Override
+                public void onNavigationEvent(int navigationEvent, Bundle extras) {
+                    switch (navigationEvent) {
+                        case NAVIGATION_FINISHED:
+                            notifyListeners("browserPageLoaded", new JSObject());
+                            break;
+                    }
+                }
+            });
+        }
+
+        return currentSession;
+    }
+
+    @Override
+    protected void handleOnActivityResult(int requestCode, int resultCode, Intent data) {
+        super.handleOnActivityResult(requestCode, resultCode, data);
     }
 }
