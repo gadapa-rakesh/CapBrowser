@@ -1,6 +1,7 @@
 # CapBrowser
 This [capacitor](https://capacitor.ionicframework.com/) plugin looks similar to [Browser](https://capacitor.ionicframework.com/docs/apis/browser) core plugin but with additional features like 
  - Http header support
+ - Browser url change event
 
 **API** 
 
@@ -19,14 +20,14 @@ This [capacitor](https://capacitor.ionicframework.com/) plugin looks similar to 
 	    console.log('browser closed');
     })
    
-   ***Available Events***
+   ***Available Events - Only for iOS***
 
     CapBrowser.addListener("urlChangeEvent", (info:  any) => {
 	    console.log(info.url)
     })
 
 **TODO**
- - Implement support for Android
+ - Implement url change event for android
 
 **Credits**
  - [WKWebViewController](https://github.com/Meniny/WKWebViewController) - for iOS
