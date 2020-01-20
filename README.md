@@ -20,14 +20,22 @@ This [capacitor](https://capacitor.ionicframework.com/) plugin looks similar to 
 	    console.log('browser closed');
     })
    
-   ***Available Events - Only for iOS***
+***Available Events - Works for android with openPlainBrowser flag as true***
 
     CapBrowser.addListener("urlChangeEvent", (info:  any) => {
 	    console.log(info.url)
     })
 
+***Options***
+
+    {
+        url:  'http://google.com/',
+        headers: { "one":  "1", "two":  "2" },
+        openPlainBrowser: true // uses android WebView when true else CustomTabsIntent
+    }
+
 **TODO**
- - Implement url change event for android
+ - Implement toolbar on android WebView for basic user actions
 
 **Credits**
  - [WKWebViewController](https://github.com/Meniny/WKWebViewController) - for iOS
