@@ -1,5 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.cap.browser.plugin.capbrowser">
 
-  <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.cap.browser.plugin.capbrowser">
-  </manifest>
-  
+    <application
+        android:usesCleartextTraffic="true">
+        <activity
+            android:name="com.cap.browser.plugin.WebViewActivity"
+            android:label="@string/title_activity_browser"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+    </application>
+
+</manifest>

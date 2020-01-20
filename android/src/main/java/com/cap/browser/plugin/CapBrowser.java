@@ -2,7 +2,6 @@ package com.cap.browser.plugin;
 
 import android.content.ComponentName;
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.customtabs.CustomTabsCallback;
@@ -11,21 +10,21 @@ import android.support.customtabs.CustomTabsIntent;
 import android.support.customtabs.CustomTabsServiceConnection;
 import android.support.customtabs.CustomTabsSession;
 import android.util.Log;
-import com.getcapacitor.JSArray;
+
 import com.getcapacitor.JSObject;
 import com.getcapacitor.NativePlugin;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
-import org.json.JSONException;
 
 import java.util.Iterator;
 
 @NativePlugin()
 public class CapBrowser extends Plugin {
     public static final String CUSTOM_TAB_PACKAGE_NAME = "com.android.chrome";  // Change when in stable
-
     private CustomTabsClient customTabsClient;
+    private CustomTabsSession currentSession;
+
     CustomTabsServiceConnection connection = new CustomTabsServiceConnection() {
         @Override
         public void onCustomTabsServiceConnected(ComponentName name, CustomTabsClient client) {
@@ -37,52 +36,21 @@ public class CapBrowser extends Plugin {
         public void onServiceDisconnected(ComponentName name) {
         }
     };
-    private CustomTabsSession currentSession;
+
+    /** Call Data **/
+    private String url;
+    private Boolean openInWebView;
+    private Bundle headers;
 
     @PluginMethod()
     public void open(PluginCall call) {
-        String url = call.getString("url");
-        String toolbarColor = call.getString("toolbarColor");
+        if(!this.setupData(call)) return;
 
-        if (url == null) {
-            call.error("Must provide a URL to open");
-            return;
+        if(this.openInWebView) {
+            this.openWebViewIntent(call);
+        } else {
+            this.openChromeTab(call);
         }
-
-        if (url.isEmpty()) {
-            call.error("URL must not be empty");
-            return;
-        }
-
-        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(getCustomTabsSession());
-
-        builder.addDefaultShareMenuItem();
-
-        if (toolbarColor != null) {
-            try {
-                builder.setToolbarColor(Color.parseColor(toolbarColor));
-            } catch (IllegalArgumentException ex) {
-                Log.e(getLogTag(), "Invalid color provided for toolbarColor. Using default");
-            }
-        }
-
-        CustomTabsIntent tabsIntent = builder.build();
-        tabsIntent.intent.putExtra(Intent.EXTRA_REFERRER,
-                Uri.parse(Intent.URI_ANDROID_APP_SCHEME + "//" + getContext().getPackageName()));
-
-        JSObject headers = call.getObject("headers");
-        if(headers != null) {
-            Iterator<String> keys = headers.keys();
-            Bundle ctHeaders = new Bundle();
-            while(keys.hasNext()) {
-                String key = keys.next();
-                ctHeaders.putString(key, headers.getString(key));
-            }
-            tabsIntent.intent.putExtra(android.provider.Browser.EXTRA_HEADERS, ctHeaders);
-        }
-
-        tabsIntent.launchUrl(getContext(), Uri.parse(url));
-        call.success();
     }
 
     @PluginMethod()
@@ -90,34 +58,71 @@ public class CapBrowser extends Plugin {
         Intent intent = new Intent(getContext(), getBridge().getActivity().getClass());
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         getContext().startActivity(intent);
+        call.success();
     }
 
-    @PluginMethod()
-    public void prefetch(PluginCall call) {
-        JSArray urls = call.getArray("urls");
-        if (urls == null || urls.length() == 0) {
-            call.error("Must provide an array of URLs to prefetch");
-            return;
+    private boolean setupData(PluginCall call) {
+        /** Get URL **/
+        String requestedUrl = call.getString("url");
+
+        if (requestedUrl == null) {
+            call.error("Must provide a URL to open");
+            return false;
         }
 
-        CustomTabsSession session = getCustomTabsSession();
-
-        if (session == null) {
-            call.error("Browser session isn't ready yet");
-            return;
+        if (requestedUrl.isEmpty()) {
+            call.error("URL must not be empty");
+            return false;
         }
 
-        try {
-            for (String url : urls.<String>toList()) {
-                session.mayLaunchUrl(Uri.parse(url), null, null);
+        this.url = requestedUrl;
+
+        /** Extract Headers **/
+        JSObject headersProvided = call.getObject("headers");
+        if(headersProvided != null) {
+            Iterator<String> keys = headersProvided.keys();
+            this.headers = new Bundle();
+            while(keys.hasNext()) {
+                String key = keys.next();
+                this.headers.putString(key, headersProvided.getString(key));
             }
-        } catch(JSONException ex) {
-            call.error("Unable to process provided urls list. Ensure each item is a string and valid URL", ex);
-            return;
         }
+
+        this.openInWebView = call.getBoolean("openPlainBrowser");
+        this.openInWebView = this.openInWebView == null ? false : this.openInWebView;
+
+        return true;
     }
 
-    public void load() {
+    private void openWebViewIntent(PluginCall pluginCall) {
+        WebViewBuilder builder = new WebViewBuilder(new WebViewCallbacks() {
+            @Override
+            public void urlChangeEvent(String url) {
+                notifyListeners("urlChangeEvent", new JSObject().put("url", url));
+            }
+
+            @Override
+            public void pageLoaded() {
+                notifyListeners("browserPageLoaded", new JSObject());
+            }
+        });
+        Intent intent = builder.buildWebView(getActivity());
+        intent.putExtra("url", this.url);
+        intent.putExtra("headers", this.headers);
+        getContext().startActivity(intent);
+        pluginCall.success();
+    }
+
+    private void openChromeTab(PluginCall pluginCall) {
+        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(getCustomTabsSession());
+        builder.addDefaultShareMenuItem();
+        CustomTabsIntent tabsIntent = builder.build();
+        tabsIntent.intent.putExtra(Intent.EXTRA_REFERRER,
+                Uri.parse(Intent.URI_ANDROID_APP_SCHEME + "//" + getContext().getPackageName()));
+        tabsIntent.intent.putExtra(android.provider.Browser.EXTRA_HEADERS, this.headers);
+        tabsIntent.launchUrl(getContext(), Uri.parse(url));
+
+        pluginCall.success();
     }
 
     protected void handleOnResume() {
@@ -148,7 +153,6 @@ public class CapBrowser extends Plugin {
                 }
             });
         }
-
         return currentSession;
     }
 
