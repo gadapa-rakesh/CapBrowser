@@ -23,6 +23,42 @@ public class CapBrowser: CAPPlugin {
         #endif
     }
     
+    @objc func openWebView(_ call: CAPPluginCall) {
+        if !self.isSetupDone {
+            self.setup()
+        }
+        guard let urlString = call.getString("url") else {
+            call.error("Must provide a URL to open")
+            return
+        }
+        
+        if urlString.isEmpty {
+            call.error("URL must not be empty")
+            return
+        }
+        let hideNavBar = call.getBool("hideNavBar", false);
+        
+        let headers = call.get("headers", [String: String].self, [:])
+        
+        DispatchQueue.main.async {
+            let url = URL(string: urlString)
+            let webViewController = WKWebViewController.init()
+            webViewController.source = .remote(url!)
+            webViewController.headers = headers
+            webViewController.leftNavigaionBarItemTypes = []
+            webViewController.toolbarItemTypes = []
+            webViewController.doneBarButtonItemPosition = .right
+            webViewController.capBrowserPlugin = self
+            self.navigationWebViewController = UINavigationController.init(rootViewController: webViewController)
+            self.navigationWebViewController?.navigationBar.backgroundColor = .white
+            self.navigationWebViewController?.modalPresentationStyle = .fullScreen
+            self.navigationWebViewController?.navigationBar.isHidden = hideNavBar!
+            self.bridge.viewController.present(self.navigationWebViewController!, animated: true, completion: {
+              call.success()
+            })
+        }
+    }
+    
     @objc func open(_ call: CAPPluginCall) {
         if !self.isSetupDone {
             self.setup()
