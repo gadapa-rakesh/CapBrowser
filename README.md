@@ -14,13 +14,22 @@ This [capacitor](https://capacitor.ionicframework.com/) plugin looks similar to 
         console.log('showing the window');
     })
 
+***openWebView - Opens a plain webView instance without navBar***
+
+    CapBrowser.open({
+        url:  'http://google.com/',
+        headers: { "one":  "1", "two":  "2" }
+    }).then(() => {
+        console.log('showing the window');
+    })
+
 ***Close***
 
     CapBrowser.close().then(() => {
 	    console.log('browser closed');
     })
    
-***Available Events - Works for android with openPlainBrowser flag as true***
+***Available Events - Works for both android (on webView) and iOS***
 
     CapBrowser.addListener("urlChangeEvent", (info:  any) => {
 	    console.log(info.url)
@@ -30,8 +39,7 @@ This [capacitor](https://capacitor.ionicframework.com/) plugin looks similar to 
 
     {
         url:  'http://google.com/',
-        headers: { "one":  "1", "two":  "2" },
-        openPlainBrowser: true // uses android WebView when true else CustomTabsIntent
+        headers: { "one":  "1", "two":  "2" }
     }
 
 **TODO**
