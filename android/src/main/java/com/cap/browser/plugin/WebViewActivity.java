@@ -48,12 +48,12 @@ public class WebViewActivity extends AppCompatActivity {
             @Override
             public void onLoadResource(WebView view, String url) {
                 super.onLoadResource(view, url);
-                WebViewBuilder.callbacks.urlChangeEvent(url);
             }
 
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
+                WebViewBuilder.callbacks.urlChangeEvent(url);
             }
 
             @Override

@@ -39,18 +39,18 @@ public class CapBrowser extends Plugin {
 
     /** Call Data **/
     private String url;
-    private Boolean openInWebView;
     private Bundle headers;
+
+    @PluginMethod()
+    public void openWebView(PluginCall call) {
+        if(!this.setupData(call)) return;
+        this.openWebViewIntent(call);
+    }
 
     @PluginMethod()
     public void open(PluginCall call) {
         if(!this.setupData(call)) return;
-
-        if(this.openInWebView) {
-            this.openWebViewIntent(call);
-        } else {
-            this.openChromeTab(call);
-        }
+        this.openChromeTab(call);
     }
 
     @PluginMethod()
@@ -87,10 +87,6 @@ public class CapBrowser extends Plugin {
                 this.headers.putString(key, headersProvided.getString(key));
             }
         }
-
-        this.openInWebView = call.getBoolean("openPlainBrowser");
-        this.openInWebView = this.openInWebView == null ? false : this.openInWebView;
-
         return true;
     }
 
