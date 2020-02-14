@@ -49,6 +49,7 @@ open class WKWebViewController: UIViewController {
         self.source = .remote(url)
     }
     
+    open var hasDynamicTitle = false
     open var source: WKWebSource?
     /// use `source` instead
     open internal(set) var url: URL?
@@ -237,7 +238,9 @@ open class WKWebViewController: UIViewController {
                 })
             }
         case titleKeyPath?:
-            navigationItem.title = webView?.url?.host
+            if self.hasDynamicTitle {
+                self.navigationItem.title = webView?.url?.host
+            }
         case "URL":
             self.capBrowserPlugin?.notifyListeners("urlChangeEvent", data: ["url" : webView?.url?.absoluteString])
         default:
