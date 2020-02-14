@@ -8,6 +8,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -27,10 +28,14 @@ public class WebViewActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_browser);
 
+        boolean hideNavBar = getIntent().getBooleanExtra("hideNavBar", false);
+
         Toolbar toolbar = findViewById(R.id.tool_bar);
         String title = getIntent().getStringExtra("title");
         toolbar.setTitle(title);
         setSupportActionBar(toolbar);
+
+        if(hideNavBar) toolbar.setVisibility(View.GONE);
 
         this.webView = findViewById(R.id.browser_view);
         url = getIntent().getStringExtra("url");
@@ -59,11 +64,17 @@ public class WebViewActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
         if (id == R.id.action_close) {
             finish();
             return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 

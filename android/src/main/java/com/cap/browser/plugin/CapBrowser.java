@@ -41,6 +41,7 @@ public class CapBrowser extends Plugin {
     private String url;
     private Bundle headers;
     private String title;
+    private boolean hideNavBar;
 
     @PluginMethod()
     public void openWebView(PluginCall call) {
@@ -81,6 +82,8 @@ public class CapBrowser extends Plugin {
         this.title = call.getString("title");
         this.title = this.title == null ? "New Window" : this.title;
 
+        this.hideNavBar = call.getBoolean("hideNavBar", false);
+
         /** Extract Headers **/
         JSObject headersProvided = call.getObject("headers");
         if(headersProvided != null) {
@@ -110,6 +113,7 @@ public class CapBrowser extends Plugin {
         intent.putExtra("url", this.url);
         intent.putExtra("headers", this.headers);
         intent.putExtra("title", this.title);
+        intent.putExtra("hideNavBar", this.hideNavBar);
         getContext().startActivity(intent);
         pluginCall.success();
     }
