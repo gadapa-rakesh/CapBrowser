@@ -1,4 +1,4 @@
 <resources>
     <string name="my_string">Just a simple string</string>
-    <string name="title_activity_browser">BrowserActivity</string>
+    <string name="title_activity_browser">New Window</string>
 </resources>
