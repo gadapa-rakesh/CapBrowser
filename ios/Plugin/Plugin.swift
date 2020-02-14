@@ -36,6 +36,12 @@ public class CapBrowser: CAPPlugin {
             call.error("URL must not be empty")
             return
         }
+        var title = call.getString("title");
+        
+        if (title ?? "").isEmpty {
+            title = "New Window"
+        }
+        
         let hideNavBar = call.getBool("hideNavBar", false);
         
         let headers = call.get("headers", [String: String].self, [:])
@@ -49,6 +55,7 @@ public class CapBrowser: CAPPlugin {
             webViewController.toolbarItemTypes = []
             webViewController.doneBarButtonItemPosition = .right
             webViewController.capBrowserPlugin = self
+            webViewController.title = title
             self.navigationWebViewController = UINavigationController.init(rootViewController: webViewController)
             self.navigationWebViewController?.navigationBar.backgroundColor = .white
             self.navigationWebViewController?.modalPresentationStyle = .fullScreen
@@ -83,6 +90,7 @@ public class CapBrowser: CAPPlugin {
             webViewController.leftNavigaionBarItemTypes = [.reload]
             webViewController.toolbarItemTypes = [.back, .forward, .activity]
             webViewController.capBrowserPlugin = self
+            webViewController.hasDynamicTitle = true
             self.navigationWebViewController = UINavigationController.init(rootViewController: webViewController)
             self.navigationWebViewController?.navigationBar.backgroundColor = .white
             self.navigationWebViewController?.modalPresentationStyle = .fullScreen
