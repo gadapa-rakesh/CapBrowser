@@ -40,6 +40,7 @@ public class CapBrowser extends Plugin {
     /** Call Data **/
     private String url;
     private Bundle headers;
+    private String title;
 
     @PluginMethod()
     public void openWebView(PluginCall call) {
@@ -77,6 +78,9 @@ public class CapBrowser extends Plugin {
 
         this.url = requestedUrl;
 
+        this.title = call.getString("title");
+        this.title = this.title == null ? "New Window" : this.title;
+
         /** Extract Headers **/
         JSObject headersProvided = call.getObject("headers");
         if(headersProvided != null) {
@@ -105,6 +109,7 @@ public class CapBrowser extends Plugin {
         Intent intent = builder.buildWebView(getActivity());
         intent.putExtra("url", this.url);
         intent.putExtra("headers", this.headers);
+        intent.putExtra("title", this.title);
         getContext().startActivity(intent);
         pluginCall.success();
     }

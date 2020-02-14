@@ -4,7 +4,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -23,6 +26,12 @@ public class WebViewActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_browser);
+
+        Toolbar toolbar = findViewById(R.id.tool_bar);
+        String title = getIntent().getStringExtra("title");
+        toolbar.setTitle(title);
+        setSupportActionBar(toolbar);
+
         this.webView = findViewById(R.id.browser_view);
         url = getIntent().getStringExtra("url");
         if (TextUtils.isEmpty(url)) {
@@ -39,6 +48,23 @@ public class WebViewActivity extends AppCompatActivity {
             }
         }
         webView.loadUrl(url, requestHeaders);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_close) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void initWebView() {
