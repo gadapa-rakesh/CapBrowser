@@ -52,6 +52,7 @@ This [capacitor](https://capacitor.ionicframework.com/) plugin looks similar to 
     }
 
 **TODO**
+
  [ ] Implement capability for hideShareBtn & custom User-Agent
 
 **Credits**
