@@ -44,18 +44,30 @@ public class CapBrowser: CAPPlugin {
         
         let hideNavBar = call.getBool("hideNavBar", false);
         
-        let headers = call.get("headers", [String: String].self, [:])
+        var headers = call.get("headers", [String: String].self, [:])
+        let userAgent = headers?["User-Agent"]
+        headers?.removeValue(forKey: "User-Agent")
+        
+        let hideShareBtn = call.getBool("hideShareBtn", false);
         
         DispatchQueue.main.async {
             let url = URL(string: urlString)
             let webViewController = WKWebViewController.init()
             webViewController.source = .remote(url!)
             webViewController.headers = headers
-            webViewController.leftNavigaionBarItemTypes = []
+            if hideShareBtn! {
+                webViewController.leftNavigaionBarItemTypes = []
+            } else {
+                webViewController.leftNavigaionBarItemTypes = [.activity]
+            }
+            
             webViewController.toolbarItemTypes = []
             webViewController.doneBarButtonItemPosition = .right
             webViewController.capBrowserPlugin = self
             webViewController.title = title
+            if userAgent != nil {
+                webViewController.customUserAgent = userAgent
+            }
             self.navigationWebViewController = UINavigationController.init(rootViewController: webViewController)
             self.navigationWebViewController?.navigationBar.backgroundColor = .white
             self.navigationWebViewController?.modalPresentationStyle = .fullScreen
