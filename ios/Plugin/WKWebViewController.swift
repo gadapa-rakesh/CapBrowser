@@ -60,6 +60,10 @@ open class WKWebViewController: UIViewController {
     open var cookies: [HTTPCookie]?
     open var headers: [String: String]?
     open var capBrowserPlugin: CapBrowser?
+    var maxViewHeight: Float?
+    var shareDisclaimer: [String: Any]?
+    var shareSubject: String?
+    
     internal var customUserAgent: String? {
         didSet {
             guard let agent = userAgent else {
@@ -180,7 +184,7 @@ open class WKWebViewController: UIViewController {
         }
         webView.addObserver(self, forKeyPath: #keyPath(WKWebView.url) , options: .new, context: nil)
         
-        //        view = webView
+        self.view = webView
         self.webView = webView
         
         self.webView?.customUserAgent = self.customUserAgent ?? self.userAgent ?? self.originalUserAgent
@@ -200,6 +204,26 @@ open class WKWebViewController: UIViewController {
             self.load(source: s)
         } else {
             print("[\(type(of: self))][Error] Invalid url")
+        }
+    }
+    
+    open override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        if UIDevice.current.orientation.isPortrait {
+            self.navigationController?.toolbar.isHidden = false
+        } else if UIDevice.current.orientation.isLandscape {
+            self.navigationController?.toolbar.isHidden = true
+        }
+    }
+    
+    open override func viewWillLayoutSubviews() {
+        if toolbarItemTypes.count > 0 && maxViewHeight == nil {
+            let toolbarHeight = Float(UIScreen.main.bounds.height - (self.navigationController?.toolbar.frame.origin.y)!)
+            self.maxViewHeight = Float(Float((self.webView?.frame.size.height)!) - toolbarHeight)
+            self.view?.frame.size.height = CGFloat(self.maxViewHeight!)
+        }
+        
+        if toolbarItemTypes.count > 0 && self.maxViewHeight != nil && UIDevice.current.orientation.isPortrait {
+            self.view?.frame.size.height = CGFloat(self.maxViewHeight!)
         }
     }
     
@@ -326,7 +350,7 @@ fileprivate extension WKWebViewController {
     
     func setUpConstraints() {
         if let progressView = self.progressView, let web = self.webView {
-            self.view.translates(subViews: progressView, web)
+            self.view.translates(subViews: progressView)
             self.view.layout(
                 0,
                 |progressView| ~ 2,
@@ -568,10 +592,32 @@ fileprivate extension WKWebViewController {
         case .string(let str, base: _):
             items = [str]
         }
-        
-        let activityViewController = UIActivityViewController(activityItems: items, applicationActivities: nil)
-        activityViewController.popoverPresentationController?.barButtonItem = (sender as! UIBarButtonItem)
-        present(activityViewController, animated: true, completion: nil)
+        showDisclaimer(items: items, sender: sender)
+    }
+    
+    func showDisclaimer(items: [Any], sender: AnyObject) {
+        let showDisclaimer: Bool = self.shareDisclaimer != nil
+        if(showDisclaimer) {
+            let alert = UIAlertController(
+                title: self.shareDisclaimer?["title"] as? String ?? "Title",
+                message: self.shareDisclaimer?["message"] as? String ?? "Message",
+                preferredStyle: UIAlertController.Style.alert)
+            alert.addAction(UIAlertAction(title: self.shareDisclaimer?["confirmBtn"] as? String ?? "Confirm", style: UIAlertAction.Style.default, handler: { action in
+                self.shareDisclaimer = nil
+                self.capBrowserPlugin?.notifyListeners("confirmBtnClicked", data: nil)
+                let activityViewController = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                activityViewController.setValue(self.shareSubject ?? self.title, forKey: "subject")
+                activityViewController.popoverPresentationController?.barButtonItem = (sender as! UIBarButtonItem)
+                self.present(activityViewController, animated: true, completion: nil)
+            }))
+            alert.addAction(UIAlertAction(title: self.shareDisclaimer?["cancelBtn"] as? String ?? "Cancel", style: UIAlertAction.Style.default, handler: nil))
+            self.present(alert, animated: true, completion: nil)
+        } else {
+            let activityViewController = UIActivityViewController(activityItems: items, applicationActivities: nil)
+            activityViewController.setValue(self.shareSubject ?? self.title, forKey: "subject")
+            activityViewController.popoverPresentationController?.barButtonItem = (sender as! UIBarButtonItem)
+            self.present(activityViewController, animated: true, completion: nil)
+        }
     }
     
     @objc func doneDidClick(sender: AnyObject) {
@@ -580,7 +626,7 @@ fileprivate extension WKWebViewController {
             canDismiss = delegate?.webViewController?(self, canDismiss: url) ?? true
         }
         if canDismiss {
-            UIDevice.current.setValue(Int(UIInterfaceOrientation.portrait.rawValue), forKey: "orientation")
+//            UIDevice.current.setValue(Int(UIInterfaceOrientation.portrait.rawValue), forKey: "orientation")
             dismiss(animated: true, completion: nil)
         }
     }
