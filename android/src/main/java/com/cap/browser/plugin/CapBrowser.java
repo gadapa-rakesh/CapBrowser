@@ -9,6 +9,7 @@ import android.support.customtabs.CustomTabsClient;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.customtabs.CustomTabsServiceConnection;
 import android.support.customtabs.CustomTabsSession;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.getcapacitor.JSObject;
@@ -16,6 +17,9 @@ import com.getcapacitor.NativePlugin;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Iterator;
 
@@ -37,67 +41,29 @@ public class CapBrowser extends Plugin {
         }
     };
 
-    /** Call Data **/
-    private String url;
-    private Bundle headers;
-    private String title;
-    private boolean hideNavBar;
-
-    @PluginMethod()
-    public void openWebView(PluginCall call) {
-        if(!this.setupData(call)) return;
-        this.openWebViewIntent(call);
-    }
-
     @PluginMethod()
     public void open(PluginCall call) {
-        if(!this.setupData(call)) return;
-        this.openChromeTab(call);
-    }
+        String url = call.getString("url");
+        if(url == null || TextUtils.isEmpty(url)) {
+            call.error("Invalid URL");
+        }
+        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(getCustomTabsSession());
+        builder.addDefaultShareMenuItem();
+        CustomTabsIntent tabsIntent = builder.build();
+        tabsIntent.intent.putExtra(Intent.EXTRA_REFERRER,
+                Uri.parse(Intent.URI_ANDROID_APP_SCHEME + "//" + getContext().getPackageName()));
+        tabsIntent.intent.putExtra(android.provider.Browser.EXTRA_HEADERS, this.getHeaders(call));
+        tabsIntent.launchUrl(getContext(), Uri.parse(url));
 
-    @PluginMethod()
-    public void close(PluginCall call) {
-        Intent intent = new Intent(getContext(), getBridge().getActivity().getClass());
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        getContext().startActivity(intent);
         call.success();
     }
 
-    private boolean setupData(PluginCall call) {
-        /** Get URL **/
-        String requestedUrl = call.getString("url");
-
-        if (requestedUrl == null) {
-            call.error("Must provide a URL to open");
-            return false;
+    @PluginMethod()
+    public void openWebView(PluginCall call) {
+        String url = call.getString("url");
+        if(url == null || TextUtils.isEmpty(url)) {
+            call.error("Invalid URL");
         }
-
-        if (requestedUrl.isEmpty()) {
-            call.error("URL must not be empty");
-            return false;
-        }
-
-        this.url = requestedUrl;
-
-        this.title = call.getString("title");
-        this.title = this.title == null ? "New Window" : this.title;
-
-        this.hideNavBar = call.getBoolean("hideNavBar", false);
-
-        /** Extract Headers **/
-        JSObject headersProvided = call.getObject("headers");
-        if(headersProvided != null) {
-            Iterator<String> keys = headersProvided.keys();
-            this.headers = new Bundle();
-            while(keys.hasNext()) {
-                String key = keys.next();
-                this.headers.putString(key, headersProvided.getString(key));
-            }
-        }
-        return true;
-    }
-
-    private void openWebViewIntent(PluginCall pluginCall) {
         WebViewBuilder builder = new WebViewBuilder(new WebViewCallbacks() {
             @Override
             public void urlChangeEvent(String url) {
@@ -110,24 +76,50 @@ public class CapBrowser extends Plugin {
             }
         });
         Intent intent = builder.buildWebView(getActivity());
-        intent.putExtra("url", this.url);
-        intent.putExtra("headers", this.headers);
-        intent.putExtra("title", this.title);
-        intent.putExtra("hideNavBar", this.hideNavBar);
+        intent.putExtra("url", url);
+        intent.putExtra("headers", this.getHeaders(call));
+        intent.putExtra("title", call.getString("title", "New Window"));
+        intent.putExtra("hideNavBar", call.getBoolean("hideNavBar", false));
+        intent.putExtra("toolbarType", call.getString("toolbarType", ""));
+
+        JSONObject disclaimerInput = call.getObject("shareDisclaimer", null);
+        Bundle disclaimerContent = new Bundle();
+        if(disclaimerInput != null) {
+            try {
+                disclaimerContent.putString("title", disclaimerInput.getString("title"));
+                disclaimerContent.putString("message", disclaimerInput.getString("message"));
+                disclaimerContent.putString("confirmBtn", disclaimerInput.getString("confirmBtn"));
+                disclaimerContent.putString("cancelBtn", disclaimerInput.getString("cancelBtn"));
+            } catch (JSONException e) {
+                // do nothing in case of exception
+                e.printStackTrace();
+            }
+        }
+        intent.putExtra("shareDisclaimerContent", disclaimerContent);
+        intent.putExtra("shareSubject", call.getString("shareSubject", null));
         getContext().startActivity(intent);
-        pluginCall.success();
+        call.success();
     }
 
-    private void openChromeTab(PluginCall pluginCall) {
-        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(getCustomTabsSession());
-        builder.addDefaultShareMenuItem();
-        CustomTabsIntent tabsIntent = builder.build();
-        tabsIntent.intent.putExtra(Intent.EXTRA_REFERRER,
-                Uri.parse(Intent.URI_ANDROID_APP_SCHEME + "//" + getContext().getPackageName()));
-        tabsIntent.intent.putExtra(android.provider.Browser.EXTRA_HEADERS, this.headers);
-        tabsIntent.launchUrl(getContext(), Uri.parse(url));
+    @PluginMethod()
+    public void close(PluginCall call) {
+        Intent intent = new Intent(getContext(), getBridge().getActivity().getClass());
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        getContext().startActivity(intent);
+        call.success();
+    }
 
-        pluginCall.success();
+    private Bundle getHeaders(PluginCall pluginCall) {
+        JSObject headersProvided = pluginCall.getObject("headers");
+        Bundle headers = new Bundle();
+        if(headersProvided != null) {
+            Iterator<String> keys = headersProvided.keys();
+            while(keys.hasNext()) {
+                String key = keys.next();
+                headers.putString(key, headersProvided.getString(key));
+            }
+        }
+        return headers;
     }
 
     protected void handleOnResume() {
