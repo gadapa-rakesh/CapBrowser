@@ -21,13 +21,20 @@ This [capacitor](https://capacitor.ionicframework.com/) plugin looks similar to 
 ***openWebView - Opens a plain webView instance without navBar***
 
     CapBrowser.openWebView({
-        url:  'http://google.com/',
-        headers: { "one":  "1", "two":  "2" },
-        title: "Custom Title",
-        hideNavBar: false,
-        hideShareBtn: true
+      url: 'https://www.google.com/',
+      headers: { "one": "1", "two": "2" },
+      title: "Custom Title",
+      hideNavBar: false,
+      toolbarType: "navigation",
+      shareDisclaimer: {
+        title: "Disclaimer",
+        message: "Some Content",
+        confirmBtn: "Proceed",
+        cancelBtn: "No"
+      },
+      shareSubject: "Some subject"
     }).then(() => {
-        console.log('showing the window');
+      console.log('showing the window');
     })
 
 ***Close***
