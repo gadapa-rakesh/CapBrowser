@@ -6,9 +6,15 @@
     tools:context=".MainActivity">
 
     <item
-        android:id="@+id/action_close"
+        android:id="@+id/action_back"
         android:orderInCategory="300"
-        android:title="Close"
-        android:icon="@drawable/ic_clear_24px"
+        android:title="back"
+        android:icon="@drawable/arrow_back_disabled"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_forward"
+        android:orderInCategory="300"
+        android:title="forward"
+        android:icon="@drawable/arrow_forward_disabled"
         app:showAsAction="ifRoom" />
 </menu>

@@ -22,20 +22,16 @@ import java.util.Set;
 public class WebViewActivity extends AppCompatActivity {
     private WebView webView;
     private String url;
+    private boolean initialPageLoaded = false;
+    private Toolbar toolbar = null;
+    private String toolbarType = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_browser);
 
-        boolean hideNavBar = getIntent().getBooleanExtra("hideNavBar", false);
-
-        Toolbar toolbar = findViewById(R.id.tool_bar);
-        String title = getIntent().getStringExtra("title");
-        toolbar.setTitle(title);
-        setSupportActionBar(toolbar);
-
-        if(hideNavBar) toolbar.setVisibility(View.GONE);
+        this.setupToolbar();
 
         this.webView = findViewById(R.id.browser_view);
         url = getIntent().getStringExtra("url");
@@ -55,11 +51,43 @@ public class WebViewActivity extends AppCompatActivity {
         webView.loadUrl(url, requestHeaders);
     }
 
+    private void setupToolbar() {
+        toolbar = findViewById(R.id.tool_bar);
+        String title = getIntent().getStringExtra("title");
+        toolbar.setTitle(title);
+        setSupportActionBar(toolbar);
+        this.getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_clear_24px);
+        this.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        boolean hideNavBar = getIntent().getBooleanExtra("hideNavBar", false);
+        if(hideNavBar) toolbar.setVisibility(View.GONE);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        this.toolbarType = getIntent().getStringExtra("toolbarType");
+        if(!TextUtils.isEmpty(toolbarType) && "activity".equalsIgnoreCase(toolbarType)) {
+            toolbar.getMenu().findItem(R.id.action_forward).setVisible(false);
+            toolbar.getMenu().findItem(R.id.action_back).setVisible(false);
+            //TODO: Add share button functionality
+        } else if(!TextUtils.isEmpty(toolbarType) && "navigation".equalsIgnoreCase(toolbarType)) {
+            //TODO: Remove share button when implemented
+        } else {
+            toolbar.getMenu().findItem(R.id.action_forward).setVisible(false);
+            toolbar.getMenu().findItem(R.id.action_back).setVisible(false);
+        }
+
         return true;
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        finish(); // close this activity as oppose to navigating up
+
+        return false;
     }
 
     @Override
@@ -67,11 +95,12 @@ public class WebViewActivity extends AppCompatActivity {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_close) {
-            finish();
+        if(item.getItemId() == R.id.action_forward) {
+            webView.goForward();
+            return true;
+        } else if(item.getItemId() == R.id.action_back) {
+            webView.goBack();
             return true;
         }
 
@@ -95,8 +124,30 @@ public class WebViewActivity extends AppCompatActivity {
 
             @Override
             public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
+                MenuItem backButton = toolbar.getMenu().findItem(R.id.action_back);
+                if(webView.canGoBack()) {
+                    backButton.setIcon(R.drawable.arrow_back_enabled);
+                    backButton.setEnabled(true);
+                } else {
+                    backButton.setIcon(R.drawable.arrow_back_disabled);
+                    backButton.setEnabled(false);
+                }
+
+                MenuItem forwardBtn = toolbar.getMenu().findItem(R.id.action_forward);
+                if(webView.canGoForward()) {
+                    forwardBtn.setIcon(R.drawable.arrow_forward_enabled);
+                    forwardBtn.setEnabled(true);
+                } else {
+                    forwardBtn.setIcon(R.drawable.arrow_forward_disabled);
+                    forwardBtn.setEnabled(false);
+                }
+
                 WebViewBuilder.callbacks.pageLoaded();
+                if(!initialPageLoaded) {
+                    webView.clearHistory();
+                    initialPageLoaded = true;
+                }
+                super.onPageFinished(view, url);
             }
 
             @Override
@@ -109,6 +160,15 @@ public class WebViewActivity extends AppCompatActivity {
         webView.clearHistory();
         webView.getSettings().setJavaScriptEnabled(true);
         webView.setHorizontalScrollBarEnabled(false);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(webView.canGoBack() && "navigation".equalsIgnoreCase(this.toolbarType)) {
+            webView.goBack();
+        } else {
+            super.onBackPressed();
+        }
     }
 
     private class CustomChromeClient extends WebChromeClient {
