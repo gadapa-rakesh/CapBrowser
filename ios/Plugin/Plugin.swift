@@ -36,46 +36,55 @@ public class CapBrowser: CAPPlugin {
             call.error("URL must not be empty")
             return
         }
-        var title = call.getString("title");
-        
-        if (title ?? "").isEmpty {
-            title = "New Window"
-        }
-        
-        let hideNavBar = call.getBool("hideNavBar", false);
         
         var headers = call.get("headers", [String: String].self, [:])
         let userAgent = headers?["User-Agent"]
         headers?.removeValue(forKey: "User-Agent")
         
-        let hideShareBtn = call.getBool("hideShareBtn", false);
+        var disclaimerContent = call.getObject("shareDisclaimer", defaultValue: nil)
+        let toolbarType = call.getString("toolbarType")
+        if toolbarType != "activity" {
+            disclaimerContent = nil
+        }
         
         DispatchQueue.main.async {
             let url = URL(string: urlString)
             let webViewController = WKWebViewController.init()
             webViewController.source = .remote(url!)
             webViewController.headers = headers
-            if hideShareBtn! {
-                webViewController.leftNavigaionBarItemTypes = []
-            } else {
-                webViewController.leftNavigaionBarItemTypes = [.activity]
-            }
+            webViewController.leftNavigaionBarItemTypes = self.getToolbarItems(toolbarType: toolbarType ?? "")
             
             webViewController.toolbarItemTypes = []
             webViewController.doneBarButtonItemPosition = .right
             webViewController.capBrowserPlugin = self
-            webViewController.title = title
+            webViewController.title = call.getString("title") ?? ""
+            webViewController.shareSubject = call.getString("shareSubject")
             if userAgent != nil {
                 webViewController.customUserAgent = userAgent
             }
+            webViewController.shareDisclaimer = disclaimerContent
             self.navigationWebViewController = UINavigationController.init(rootViewController: webViewController)
+            self.navigationWebViewController?.navigationBar.isTranslucent = false
+            self.navigationWebViewController?.toolbar.isTranslucent = false
             self.navigationWebViewController?.navigationBar.backgroundColor = .white
+            self.navigationWebViewController?.toolbar.backgroundColor = .white
             self.navigationWebViewController?.modalPresentationStyle = .fullScreen
-            self.navigationWebViewController?.navigationBar.isHidden = hideNavBar!
+            self.navigationWebViewController?.navigationBar.isHidden = call.getBool("hideNavBar", false) ?? false
             self.bridge.viewController.present(self.navigationWebViewController!, animated: true, completion: {
               call.success()
             })
         }
+    }
+    
+    func getToolbarItems(toolbarType: String) -> [BarButtonItemType] {
+        var result: [BarButtonItemType] = []
+        if toolbarType == "activity" {
+            result.append(.activity)
+        } else if toolbarType == "navigation" {
+            result.append(.back)
+            result.append(.forward)
+        }
+        return result
     }
     
     @objc func open(_ call: CAPPluginCall) {
@@ -104,7 +113,10 @@ public class CapBrowser: CAPPlugin {
             webViewController.capBrowserPlugin = self
             webViewController.hasDynamicTitle = true
             self.navigationWebViewController = UINavigationController.init(rootViewController: webViewController)
+            self.navigationWebViewController?.navigationBar.isTranslucent = false
+            self.navigationWebViewController?.toolbar.isTranslucent = false
             self.navigationWebViewController?.navigationBar.backgroundColor = .white
+            self.navigationWebViewController?.toolbar.backgroundColor = .white
             self.navigationWebViewController?.modalPresentationStyle = .fullScreen
             self.bridge.viewController.present(self.navigationWebViewController!, animated: true, completion: {
               call.success()
