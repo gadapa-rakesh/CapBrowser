@@ -8,10 +8,18 @@ export class CapBrowserWeb extends WebPlugin implements CapBrowserPlugin {
       platforms: ['web']
     });
   }
-
-  async open(options: { value: string }): Promise<{value: string}> {
-    console.log('OPEN', options);
-    return options;
+  async open(options: import("./definitions").OpenOptions): Promise<any> {
+    console.log(options);
+    return true;
+  }
+  
+  async close(): Promise<any> {
+    return true;
+  }
+  
+  async openWebView(options: import("./definitions").OpenWebViewOptions): Promise<any> {
+    console.log(options);
+    return true;
   }
 }
 

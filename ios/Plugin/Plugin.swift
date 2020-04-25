@@ -127,6 +127,7 @@ public class CapBrowser: CAPPlugin {
     @objc func close(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
          self.navigationWebViewController?.dismiss(animated: true, completion: nil)
+         call.success()
         }
     }
     
