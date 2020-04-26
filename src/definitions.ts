@@ -1,14 +1,16 @@
+import { Plugin } from "@capacitor/core/dist/esm/definitions";
+
 declare module "@capacitor/core" {
   interface PluginRegistry {
     CapBrowser: CapBrowserPlugin;
   }
 }
 
-enum ToolBarType {
+export enum ToolBarType {
   ACTIVITY = "activity",
   NAVIGATION = "navigation",
   BLANK = "blank",
-  DONE = "done",
+  DEFAULT = "",
 }
 
 export interface Headers {
@@ -18,7 +20,7 @@ export interface Headers {
 export interface OpenOptions {
   url: string;
   headers?: Headers;
-  isFullScreenPresentationStyle?: boolean;
+  isPresentAfterPageLoad?: boolean;
 }
 
 export interface DisclaimerOptions {
@@ -35,10 +37,10 @@ export interface OpenWebViewOptions {
   toolbarType?: ToolBarType;
   shareSubject?: string;
   title: string;
-  isFullScreenPresentationStyle?: boolean;
+  isPresentAfterPageLoad?: boolean;
 }
 
-export interface CapBrowserPlugin {
+export interface CapBrowserPlugin extends Plugin {
   open(options: OpenOptions): Promise<any>;
   close(): Promise<any>;
   openWebView(options: OpenWebViewOptions): Promise<any>;
