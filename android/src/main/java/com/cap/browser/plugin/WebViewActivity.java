@@ -58,9 +58,6 @@ public class WebViewActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         this.getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_clear_24px);
         this.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        boolean hideNavBar = getIntent().getBooleanExtra("hideNavBar", false);
-        if(hideNavBar) toolbar.setVisibility(View.GONE);
     }
 
     @Override
@@ -69,12 +66,14 @@ public class WebViewActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_main, menu);
 
         this.toolbarType = getIntent().getStringExtra("toolbarType");
-        if(!TextUtils.isEmpty(toolbarType) && "activity".equalsIgnoreCase(toolbarType)) {
+        if(TextUtils.equals(toolbarType, "activity")) {
             toolbar.getMenu().findItem(R.id.action_forward).setVisible(false);
             toolbar.getMenu().findItem(R.id.action_back).setVisible(false);
             //TODO: Add share button functionality
-        } else if(!TextUtils.isEmpty(toolbarType) && "navigation".equalsIgnoreCase(toolbarType)) {
+        } else if(TextUtils.equals(toolbarType, "navigation")) {
             //TODO: Remove share button when implemented
+        } else if(TextUtils.equals(toolbarType, "blank")){
+            toolbar.setVisibility(View.GONE);
         } else {
             toolbar.getMenu().findItem(R.id.action_forward).setVisible(false);
             toolbar.getMenu().findItem(R.id.action_back).setVisible(false);

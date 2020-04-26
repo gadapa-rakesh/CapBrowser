@@ -10,6 +10,8 @@ public class CapBrowser: CAPPlugin {
     var navigationWebViewController: UINavigationController?
     private var privacyScreen: UIImageView?
     private var isSetupDone = false
+    var currentPluginCall: CAPPluginCall?
+    var isPresentAfterPageLoad = false
     
     private func setup(){
         self.isSetupDone = true
@@ -23,10 +25,18 @@ public class CapBrowser: CAPPlugin {
         #endif
     }
     
+    func presentView() {
+        self.bridge.viewController.present(self.navigationWebViewController!, animated: true, completion: {
+            self.currentPluginCall?.success()
+        })
+    }
+    
     @objc func openWebView(_ call: CAPPluginCall) {
         if !self.isSetupDone {
             self.setup()
         }
+        self.currentPluginCall = call
+        
         guard let urlString = call.getString("url") else {
             call.error("Must provide a URL to open")
             return
@@ -47,32 +57,43 @@ public class CapBrowser: CAPPlugin {
             disclaimerContent = nil
         }
         
+        self.isPresentAfterPageLoad = call.getBool("isPresentAfterPageLoad", false) ?? false
+        
         DispatchQueue.main.async {
             let url = URL(string: urlString)
-            let webViewController = WKWebViewController.init()
-            webViewController.source = .remote(url!)
-            webViewController.headers = headers
-            webViewController.leftNavigaionBarItemTypes = self.getToolbarItems(toolbarType: toolbarType ?? "")
+            let webViewController: WKWebViewController?
             
-            webViewController.toolbarItemTypes = []
-            webViewController.doneBarButtonItemPosition = .right
-            webViewController.capBrowserPlugin = self
-            webViewController.title = call.getString("title") ?? ""
-            webViewController.shareSubject = call.getString("shareSubject")
-            if userAgent != nil {
-                webViewController.customUserAgent = userAgent
+            if self.isPresentAfterPageLoad {
+                webViewController = WKWebViewController.init(url: url!)
+            } else {
+                webViewController = WKWebViewController.init()
             }
-            webViewController.shareDisclaimer = disclaimerContent
-            self.navigationWebViewController = UINavigationController.init(rootViewController: webViewController)
+            
+            webViewController?.source = .remote(url!)
+            webViewController?.headers = headers
+            webViewController?.leftNavigaionBarItemTypes = self.getToolbarItems(toolbarType: toolbarType ?? "")
+            
+            webViewController?.toolbarItemTypes = []
+            webViewController?.doneBarButtonItemPosition = .right
+            webViewController?.capBrowserPlugin = self
+            webViewController?.title = call.getString("title") ?? ""
+            webViewController?.shareSubject = call.getString("shareSubject")
+            if userAgent != nil {
+                webViewController?.customUserAgent = userAgent
+            }
+            webViewController?.shareDisclaimer = disclaimerContent
+            self.navigationWebViewController = UINavigationController.init(rootViewController: webViewController!)
             self.navigationWebViewController?.navigationBar.isTranslucent = false
             self.navigationWebViewController?.toolbar.isTranslucent = false
             self.navigationWebViewController?.navigationBar.backgroundColor = .white
             self.navigationWebViewController?.toolbar.backgroundColor = .white
             self.navigationWebViewController?.modalPresentationStyle = .fullScreen
-            self.navigationWebViewController?.navigationBar.isHidden = call.getBool("hideNavBar", false) ?? false
-            self.bridge.viewController.present(self.navigationWebViewController!, animated: true, completion: {
-              call.success()
-            })
+            if toolbarType == "blank" {
+                self.navigationWebViewController?.navigationBar.isHidden = true
+            }
+            if !self.isPresentAfterPageLoad {
+                self.presentView()
+            }
         }
     }
     
@@ -91,6 +112,9 @@ public class CapBrowser: CAPPlugin {
         if !self.isSetupDone {
             self.setup()
         }
+        
+        self.currentPluginCall = call
+        
         guard let urlString = call.getString("url") else {
             call.error("Must provide a URL to open")
             return
@@ -103,24 +127,33 @@ public class CapBrowser: CAPPlugin {
         
         let headers = call.get("headers", [String: String].self, [:])
         
+        self.isPresentAfterPageLoad = call.getBool("isPresentAfterPageLoad", false) ?? false
+        
         DispatchQueue.main.async {
             let url = URL(string: urlString)
-            let webViewController = WKWebViewController.init()
-            webViewController.source = .remote(url!)
-            webViewController.headers = headers
-            webViewController.leftNavigaionBarItemTypes = [.reload]
-            webViewController.toolbarItemTypes = [.back, .forward, .activity]
-            webViewController.capBrowserPlugin = self
-            webViewController.hasDynamicTitle = true
-            self.navigationWebViewController = UINavigationController.init(rootViewController: webViewController)
+            let webViewController: WKWebViewController?
+            
+            if self.isPresentAfterPageLoad {
+                webViewController = WKWebViewController.init(url: url!)
+            } else {
+                webViewController = WKWebViewController.init()
+            }
+            
+            webViewController?.source = .remote(url!)
+            webViewController?.headers = headers
+            webViewController?.leftNavigaionBarItemTypes = [.reload]
+            webViewController?.toolbarItemTypes = [.back, .forward, .activity]
+            webViewController?.capBrowserPlugin = self
+            webViewController?.hasDynamicTitle = true
+            self.navigationWebViewController = UINavigationController.init(rootViewController: webViewController!)
             self.navigationWebViewController?.navigationBar.isTranslucent = false
             self.navigationWebViewController?.toolbar.isTranslucent = false
             self.navigationWebViewController?.navigationBar.backgroundColor = .white
             self.navigationWebViewController?.toolbar.backgroundColor = .white
             self.navigationWebViewController?.modalPresentationStyle = .fullScreen
-            self.bridge.viewController.present(self.navigationWebViewController!, animated: true, completion: {
-              call.success()
-            })
+            if !self.isPresentAfterPageLoad {
+                self.presentView()
+            }
         }
     }
     

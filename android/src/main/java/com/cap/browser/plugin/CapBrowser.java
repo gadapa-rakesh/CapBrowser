@@ -79,7 +79,6 @@ public class CapBrowser extends Plugin {
         intent.putExtra("url", url);
         intent.putExtra("headers", this.getHeaders(call));
         intent.putExtra("title", call.getString("title", "New Window"));
-        intent.putExtra("hideNavBar", call.getBoolean("hideNavBar", false));
         intent.putExtra("toolbarType", call.getString("toolbarType", ""));
 
         JSONObject disclaimerInput = call.getObject("shareDisclaimer", null);

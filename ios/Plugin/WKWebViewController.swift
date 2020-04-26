@@ -42,11 +42,13 @@ open class WKWebViewController: UIViewController {
     public init(source: WKWebSource?) {
         super.init(nibName: nil, bundle: nil)
         self.source = source
+        self.initWebview()
     }
     
     public init(url: URL) {
         super.init(nibName: nil, bundle: nil)
         self.source = .remote(url)
+        self.initWebview()
     }
     
     open var hasDynamicTitle = false
@@ -60,9 +62,12 @@ open class WKWebViewController: UIViewController {
     open var cookies: [HTTPCookie]?
     open var headers: [String: String]?
     open var capBrowserPlugin: CapBrowser?
-    var maxViewHeight: Float?
     var shareDisclaimer: [String: Any]?
     var shareSubject: String?
+    var didpageInit = false
+    var viewHeightLandscape: CGFloat?
+    var viewHeightPortrait: CGFloat?
+    var currentViewHeight: CGFloat?
     
     internal var customUserAgent: String? {
         didSet {
@@ -161,8 +166,14 @@ open class WKWebViewController: UIViewController {
         webView?.removeObserver(self, forKeyPath: #keyPath(WKWebView.url))
     }
     
-    override open func viewDidLoad() {
+    override open func viewDidLoad(){
         super.viewDidLoad()
+        if self.webView == nil {
+            self.initWebview()
+        }
+    }
+    
+    open func initWebview() {
         
         self.view.backgroundColor = UIColor.white
         
@@ -183,6 +194,7 @@ open class WKWebViewController: UIViewController {
             webView.addObserver(self, forKeyPath: titleKeyPath, options: .new, context: nil)
         }
         webView.addObserver(self, forKeyPath: #keyPath(WKWebView.url) , options: .new, context: nil)
+//        NotificationCenter.default.addObserver(self, selector: #selector(restateViewHeight), name: UIDevice.orientationDidChangeNotification, object: nil)
         
         self.view = webView
         self.webView = webView
@@ -196,9 +208,7 @@ open class WKWebViewController: UIViewController {
             self.previousToolbarState = (navigation.toolbar.tintColor, navigation.toolbar.isHidden)
         }
         
-        self.setUpProgressView()
-        self.setUpConstraints()
-        self.addBarButtonItems()
+//        self.restateViewHeight()
         
         if let s = self.source {
             self.load(source: s)
@@ -207,35 +217,56 @@ open class WKWebViewController: UIViewController {
         }
     }
     
-    open override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+    open func setupViewElements() {
+        self.setUpProgressView()
+        self.setUpConstraints()
+        self.addBarButtonItems()
+    }
+    
+    @objc func restateViewHeight() {
+        var bottomPadding = CGFloat(0.0)
+        if #available(iOS 11.0, *) {
+            let window = UIApplication.shared.keyWindow
+            bottomPadding = (window?.safeAreaInsets.bottom)!
+        }
         if UIDevice.current.orientation.isPortrait {
             self.navigationController?.toolbar.isHidden = false
+            if self.viewHeightPortrait == nil {
+                self.viewHeightPortrait = self.view.safeAreaLayoutGuide.layoutFrame.size.height
+                if toolbarItemTypes.count == 0 {
+                    self.viewHeightPortrait! = self.viewHeightPortrait! + bottomPadding
+                }
+            }
+            self.currentViewHeight = self.viewHeightPortrait
         } else if UIDevice.current.orientation.isLandscape {
-            self.navigationController?.toolbar.isHidden = true
+            self.navigationController?.toolbar.isHidden = false
+            if self.viewHeightLandscape == nil {
+                self.viewHeightLandscape = self.view.safeAreaLayoutGuide.layoutFrame.size.height
+                if toolbarItemTypes.count == 0 {
+                    self.viewHeightLandscape! = self.viewHeightLandscape! + bottomPadding
+                }
+            }
+            self.currentViewHeight = self.viewHeightLandscape
         }
     }
     
+    open override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+//        self.view.frame.size.height = self.currentViewHeight!
+    }
+    
     open override func viewWillLayoutSubviews() {
-        if toolbarItemTypes.count > 0 && maxViewHeight == nil {
-            let toolbarHeight = Float(UIScreen.main.bounds.height - (self.navigationController?.toolbar.frame.origin.y)!)
-            self.maxViewHeight = Float(Float((self.webView?.frame.size.height)!) - toolbarHeight)
-            self.view?.frame.size.height = CGFloat(self.maxViewHeight!)
-        }
-        
-        if toolbarItemTypes.count > 0 && self.maxViewHeight != nil && UIDevice.current.orientation.isPortrait {
-            self.view?.frame.size.height = CGFloat(self.maxViewHeight!)
-        }
+        restateViewHeight()
+        self.view.frame.size.height = self.currentViewHeight!
     }
     
     override open func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        self.setupViewElements()
         setUpState()
     }
     
     override open func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
         rollbackState()
     }
     
@@ -390,7 +421,7 @@ fileprivate extension WKWebViewController {
             }
         }
         
-        if presentingViewController != nil {
+//        if presentingViewController != nil {
             switch doneBarButtonItemPosition {
             case .left:
                 if !leftNavigaionBarItemTypes.contains(where: { type in
@@ -417,7 +448,7 @@ fileprivate extension WKWebViewController {
             case .none:
                 break
             }
-        }
+//        }
         
         navigationItem.leftBarButtonItems = leftNavigaionBarItemTypes.map {
             barButtonItemType in
@@ -654,6 +685,10 @@ extension WKWebViewController: WKNavigationDelegate {
         }
     }
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        if !didpageInit && self.capBrowserPlugin?.isPresentAfterPageLoad == true {
+            self.capBrowserPlugin?.presentView()
+        }
+        didpageInit = true
         updateBarButtonItems()
         self.progressView?.progress = 0
         if let url = webView.url {
