@@ -13,7 +13,8 @@ This [capacitor](https://capacitor.ionicframework.com/) plugin looks similar to 
 
     CapBrowser.open({
         url:  'http://google.com/',
-        headers: { "one":  "1", "two":  "2" }
+        headers: { "one":  "1", "two":  "2" },
+        isPresentAfterPageLoad: true
     }).then(() => {
         console.log('showing the window');
     })
@@ -32,7 +33,8 @@ This [capacitor](https://capacitor.ionicframework.com/) plugin looks similar to 
         confirmBtn: "Proceed",
         cancelBtn: "No"
       },
-      shareSubject: "Some subject"
+      shareSubject: "Some subject",
+      isPresentAfterPageLoad: true
     }).then(() => {
       console.log('showing the window');
     })
