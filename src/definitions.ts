@@ -10,7 +10,7 @@ export enum ToolBarType {
   ACTIVITY = "activity",
   NAVIGATION = "navigation",
   BLANK = "blank",
-  DEFAULT = "",
+  DEFAULT = ""
 }
 
 export interface Headers {
