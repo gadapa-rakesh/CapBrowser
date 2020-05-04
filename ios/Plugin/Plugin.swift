@@ -47,9 +47,7 @@ public class CapBrowser: CAPPlugin {
             return
         }
         
-        var headers = call.get("headers", [String: String].self, [:])
-        let userAgent = headers?["User-Agent"]
-        headers?.removeValue(forKey: "User-Agent")
+        let headers = call.get("headers", [String: String].self, [:])
         
         var disclaimerContent = call.getObject("shareDisclaimer", defaultValue: nil)
         let toolbarType = call.getString("toolbarType")
@@ -64,13 +62,13 @@ public class CapBrowser: CAPPlugin {
             let webViewController: WKWebViewController?
             
             if self.isPresentAfterPageLoad {
-                webViewController = WKWebViewController.init(url: url!)
+                webViewController = WKWebViewController.init(url: url!, headers: headers ?? [:])
             } else {
                 webViewController = WKWebViewController.init()
+                webViewController?.setHeaders(headers: headers ?? [:])
             }
             
             webViewController?.source = .remote(url!)
-            webViewController?.headers = headers
             webViewController?.leftNavigaionBarItemTypes = self.getToolbarItems(toolbarType: toolbarType ?? "")
             
             webViewController?.toolbarItemTypes = []
@@ -78,9 +76,6 @@ public class CapBrowser: CAPPlugin {
             webViewController?.capBrowserPlugin = self
             webViewController?.title = call.getString("title") ?? ""
             webViewController?.shareSubject = call.getString("shareSubject")
-            if userAgent != nil {
-                webViewController?.customUserAgent = userAgent
-            }
             webViewController?.shareDisclaimer = disclaimerContent
             self.navigationWebViewController = UINavigationController.init(rootViewController: webViewController!)
             self.navigationWebViewController?.navigationBar.isTranslucent = false
@@ -134,13 +129,13 @@ public class CapBrowser: CAPPlugin {
             let webViewController: WKWebViewController?
             
             if self.isPresentAfterPageLoad {
-                webViewController = WKWebViewController.init(url: url!)
+                webViewController = WKWebViewController.init(url: url!, headers: headers ?? [:])
             } else {
                 webViewController = WKWebViewController.init()
+                webViewController?.setHeaders(headers: headers ?? [:])
             }
             
             webViewController?.source = .remote(url!)
-            webViewController?.headers = headers
             webViewController?.leftNavigaionBarItemTypes = [.reload]
             webViewController?.toolbarItemTypes = [.back, .forward, .activity]
             webViewController?.capBrowserPlugin = self

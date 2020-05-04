@@ -11,58 +11,73 @@ This [capacitor](https://capacitor.ionicframework.com/) plugin looks similar to 
 
 ***open***
 
-    CapBrowser.open({
-        url:  'http://google.com/',
-        headers: { "one":  "1", "two":  "2" },
-        isPresentAfterPageLoad: true
-    }).then(() => {
-        console.log('showing the window');
-    })
+```javascript
+CapBrowser.open({
+    url:  'http://google.com/',
+    headers: { "one":  "1", "two":  "2" },
+    isPresentAfterPageLoad: true
+}).then(() => {
+    console.log('showing the window');
+})
+```
 
 ***openWebView - Opens a plain webView instance without navBar***
 
-    CapBrowser.openWebView({
-      url: 'https://www.google.com/',
-      headers: { "one": "1", "two": "2" },
-      title: "Custom Title",
-      hideNavBar: false,
-      toolbarType: "navigation",
-      shareDisclaimer: {
-        title: "Disclaimer",
-        message: "Some Content",
-        confirmBtn: "Proceed",
-        cancelBtn: "No"
-      },
-      shareSubject: "Some subject",
-      isPresentAfterPageLoad: true
-    }).then(() => {
-      console.log('showing the window');
-    })
+```javascript
+CapBrowser.openWebView({
+    url: 'https://www.google.com/',
+    headers: { "one": "1", "two": "2" },
+    title: "Custom Title",
+    hideNavBar: false,
+    toolbarType: "navigation",
+    shareDisclaimer: {
+    title: "Disclaimer",
+    message: "Some Content",
+    confirmBtn: "Proceed",
+    cancelBtn: "No"
+    },
+    shareSubject: "Some subject",
+    isPresentAfterPageLoad: true
+}).then(() => {
+    console.log('showing the window');
+})
+```
 
 ***Close***
 
-    CapBrowser.close().then(() => {
-	    console.log('browser closed');
-    })
+```javascript
+CapBrowser.close().then(() => {
+    console.log('browser closed');
+})
+```
    
 ***Available Events - Works for both android (on webView) and iOS***
 
-    CapBrowser.addListener("urlChangeEvent", (info:  any) => {
-	    console.log(info.url)
-    })
+```javascript
+CapBrowser.addListener("urlChangeEvent", (info:  any) => {
+    console.log(info.url)
+})
+
+CapBrowser.addListener("confirmBtnClicked", (info:  any) => {
+    // will be triggered when user clicks on confirm button when disclaimer is required, works only on iOS
+    console.log(info.url)
+})
+```
 
 ***Options***
 
-    {
-        url:  'http://google.com/',
-        headers: { "one":  "1", "two":  "2" },
-        hideShareBtn: true,
-        hideNavBar: false
-    }
+**toobarType**
+```javascript
+export enum ToolBarType {
+    ACTIVITY = "activity",
+    NAVIGATION = "navigation",
+    BLANK = "blank",
+    DEFAULT = ""
+}
+```
 
 **TODO**
-
- [ ] Implement capability for hideShareBtn & custom User-Agent
+ 
 
 **Credits**
  - [WKWebViewController](https://github.com/Meniny/WKWebViewController) - for iOS

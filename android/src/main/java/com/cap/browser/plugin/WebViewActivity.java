@@ -45,7 +45,11 @@ public class WebViewActivity extends AppCompatActivity {
         if(headers != null) {
             Set<String> strings = headers.keySet();
             for(String key : strings) {
-                requestHeaders.put(key, headers.getString(key));
+                if(TextUtils.equals("User-Agent", key)) {
+                    this.webView.getSettings().setUserAgentString(headers.getString(key));
+                } else {
+                    requestHeaders.put(key, headers.getString(key));
+                }
             }
         }
         webView.loadUrl(url, requestHeaders);

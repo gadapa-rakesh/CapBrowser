@@ -51,6 +51,13 @@ open class WKWebViewController: UIViewController {
         self.initWebview()
     }
     
+    public init(url: URL, headers: [String: String]) {
+        super.init(nibName: nil, bundle: nil)
+        self.source = .remote(url)
+        self.setHeaders(headers: headers)
+        self.initWebview()
+    }
+    
     open var hasDynamicTitle = false
     open var source: WKWebSource?
     /// use `source` instead
@@ -68,6 +75,15 @@ open class WKWebViewController: UIViewController {
     var viewHeightLandscape: CGFloat?
     var viewHeightPortrait: CGFloat?
     var currentViewHeight: CGFloat?
+    
+    func setHeaders(headers: [String: String]) {
+        self.headers = headers
+        let userAgent = self.headers?["User-Agent"]
+        self.headers?.removeValue(forKey: "User-Agent")
+        if userAgent != nil {
+            self.customUserAgent = userAgent
+        }
+    }
     
     internal var customUserAgent: String? {
         didSet {
@@ -225,9 +241,11 @@ open class WKWebViewController: UIViewController {
     
     @objc func restateViewHeight() {
         var bottomPadding = CGFloat(0.0)
+        var topPadding = CGFloat(0.0)
         if #available(iOS 11.0, *) {
             let window = UIApplication.shared.keyWindow
             bottomPadding = (window?.safeAreaInsets.bottom)!
+            topPadding = (window?.safeAreaInsets.top)!
         }
         if UIDevice.current.orientation.isPortrait {
             self.navigationController?.toolbar.isHidden = false
@@ -235,6 +253,9 @@ open class WKWebViewController: UIViewController {
                 self.viewHeightPortrait = self.view.safeAreaLayoutGuide.layoutFrame.size.height
                 if toolbarItemTypes.count == 0 {
                     self.viewHeightPortrait! = self.viewHeightPortrait! + bottomPadding
+                }
+                if self.navigationController?.navigationBar.isHidden == true {
+                    self.viewHeightPortrait = self.viewHeightPortrait! + topPadding
                 }
             }
             self.currentViewHeight = self.viewHeightPortrait
@@ -244,6 +265,9 @@ open class WKWebViewController: UIViewController {
                 self.viewHeightLandscape = self.view.safeAreaLayoutGuide.layoutFrame.size.height
                 if toolbarItemTypes.count == 0 {
                     self.viewHeightLandscape! = self.viewHeightLandscape! + bottomPadding
+                }
+                if self.navigationController?.navigationBar.isHidden == true {
+                    self.viewHeightLandscape = self.viewHeightLandscape! + topPadding
                 }
             }
             self.currentViewHeight = self.viewHeightLandscape
@@ -256,7 +280,9 @@ open class WKWebViewController: UIViewController {
     
     open override func viewWillLayoutSubviews() {
         restateViewHeight()
-        self.view.frame.size.height = self.currentViewHeight!
+        if self.currentViewHeight != nil {
+            self.view.frame.size.height = self.currentViewHeight!
+        }
     }
     
     override open func viewWillAppear(_ animated: Bool) {
