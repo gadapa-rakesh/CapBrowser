@@ -8,7 +8,6 @@
 
 import UIKit
 import WebKit
-import JustLayout
 
 fileprivate let estimatedProgressKeyPath = "estimatedProgress"
 fileprivate let titleKeyPath = "title"
@@ -130,7 +129,7 @@ open class WKWebViewController: UIViewController {
     fileprivate var previousNavigationBarState: (tintColor: UIColor, hidden: Bool) = (.black, false)
     fileprivate var previousToolbarState: (tintColor: UIColor, hidden: Bool) = (.black, false)
     
-    lazy fileprivate var originalUserAgent = UIWebView().stringByEvaluatingJavaScript(from: "navigator.userAgent")
+    fileprivate var originalUserAgent: String?
     
     lazy fileprivate var backBarButtonItem: UIBarButtonItem = {
         let bundle = Bundle(for: WKWebViewController.self)
@@ -406,15 +405,10 @@ fileprivate extension WKWebViewController {
     }
     
     func setUpConstraints() {
-        if let progressView = self.progressView, let web = self.webView {
-            self.view.translates(subViews: progressView)
-            self.view.layout(
-                0,
-                |progressView| ~ 2,
-                0,
-                |web|,
-                0
-            )
+        if !(self.navigationController?.navigationBar.isHidden)! {
+            self.progressView?.frame.origin.y = CGFloat((self.navigationController?.navigationBar.frame.height)!)
+            self.navigationController?.navigationBar.addSubview(self.progressView!)
+            webView?.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: .new, context: nil)
         }
     }
     

@@ -9,7 +9,6 @@ end
 
 target 'Plugin' do
   capacitor_pods
-  pod 'JustLayout', '1.6.1'
 end
 
 target 'PluginTests' do
