@@ -18,9 +18,6 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.Iterator;
 
 @NativePlugin()
@@ -28,6 +25,7 @@ public class CapBrowser extends Plugin {
     public static final String CUSTOM_TAB_PACKAGE_NAME = "com.android.chrome";  // Change when in stable
     private CustomTabsClient customTabsClient;
     private CustomTabsSession currentSession;
+    private WebViewDialog webViewDialog = null;
 
     CustomTabsServiceConnection connection = new CustomTabsServiceConnection() {
         @Override
@@ -64,7 +62,16 @@ public class CapBrowser extends Plugin {
         if(url == null || TextUtils.isEmpty(url)) {
             call.error("Invalid URL");
         }
-        WebViewBuilder builder = new WebViewBuilder(new WebViewCallbacks() {
+        final Options options = new Options();
+        options.setUrl(url);
+        options.setHeaders(call.getObject("headers"));
+        options.setTitle(call.getString("title", "New Window"));
+        options.setShareDisclaimer(call.getObject("shareDisclaimer", null));
+        options.setShareSubject(call.getString("shareSubject", null));
+        options.setToolbarType(call.getString("toolbarType", ""));
+        options.setPresentAfterPageLoad(call.getBoolean("isPresentAfterPageLoad", false));
+        options.setPluginCall(call);
+        options.setCallbacks(new WebViewCallbacks() {
             @Override
             public void urlChangeEvent(String url) {
                 notifyListeners("urlChangeEvent", new JSObject().put("url", url));
@@ -74,37 +81,31 @@ public class CapBrowser extends Plugin {
             public void pageLoaded() {
                 notifyListeners("browserPageLoaded", new JSObject());
             }
-        });
-        Intent intent = builder.buildWebView(getActivity());
-        intent.putExtra("url", url);
-        intent.putExtra("headers", this.getHeaders(call));
-        intent.putExtra("title", call.getString("title", "New Window"));
-        intent.putExtra("toolbarType", call.getString("toolbarType", ""));
 
-        JSONObject disclaimerInput = call.getObject("shareDisclaimer", null);
-        Bundle disclaimerContent = new Bundle();
-        if(disclaimerInput != null) {
-            try {
-                disclaimerContent.putString("title", disclaimerInput.getString("title"));
-                disclaimerContent.putString("message", disclaimerInput.getString("message"));
-                disclaimerContent.putString("confirmBtn", disclaimerInput.getString("confirmBtn"));
-                disclaimerContent.putString("cancelBtn", disclaimerInput.getString("cancelBtn"));
-            } catch (JSONException e) {
-                // do nothing in case of exception
-                e.printStackTrace();
+            @Override
+            public void pageLoadError() {
+                notifyListeners("pageLoadError", new JSObject());
             }
-        }
-        intent.putExtra("shareDisclaimerContent", disclaimerContent);
-        intent.putExtra("shareSubject", call.getString("shareSubject", null));
-        getContext().startActivity(intent);
-        call.success();
+        });
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                webViewDialog = new WebViewDialog(getContext(), android.R.style.Theme_NoTitleBar, options);
+                webViewDialog.presentWebView();
+            }
+        });
     }
 
     @PluginMethod()
     public void close(PluginCall call) {
-        Intent intent = new Intent(getContext(), getBridge().getActivity().getClass());
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        getContext().startActivity(intent);
+        if (webViewDialog != null) {
+            webViewDialog.dismiss();
+            webViewDialog = null;
+        } else {
+            Intent intent = new Intent(getContext(), getBridge().getActivity().getClass());
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            getContext().startActivity(intent);
+        }
         call.success();
     }
 
