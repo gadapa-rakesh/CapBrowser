@@ -28,7 +28,6 @@ CapBrowser.openWebView({
     url: 'https://www.google.com/',
     headers: { "one": "1", "two": "2" },
     title: "Custom Title",
-    hideNavBar: false,
     toolbarType: "navigation",
     shareDisclaimer: {
     title: "Disclaimer",
