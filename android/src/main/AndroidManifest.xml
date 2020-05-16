@@ -2,11 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.cap.browser.plugin.capbrowser">
 
-    <application android:usesCleartextTraffic="true">
-        <activity
-            android:name="com.cap.browser.plugin.WebViewActivity"
-            android:label="@string/title_activity_browser"
-            android:theme="@style/AppTheme.NoActionBar" />
-    </application>
+    <application android:usesCleartextTraffic="true"></application>
 
 </manifest>
